@@ -4,7 +4,7 @@
 
 body { font: 12px Arial;}
 
-path { 
+path {
     stroke: steelblue;
     stroke-width: 2;
     fill: none;
@@ -20,54 +20,78 @@ path {
 
 </style>
 <body>
+<!-- Ref: http://www.d3noob.org/2014/07/my-favourite-tooltip-method-for-line.html -->
 
-<!-- load the d3.js library -->    
+<!-- load the d3.js library -->
 <script src="http://d3js.org/d3.v3.min.js"></script>
 
 <script>
 
 // Set the dimensions of the canvas / graph
-var margin = {top: 30, right: 20, bottom: 30, left: 50},
-    width = 600 - margin.left - margin.right,
-    height = 270 - margin.top - margin.bottom;
+var margin = {top: 30, right: 200, bottom: 30, left: 50},
+    width = 800 - margin.left - margin.right,
+    height = 240 - margin.top - margin.bottom,
+    ticks = 10;
 
 // Parse the date / time
-var parseDate = d3.time.format("%d-%b-%y").parse,
-    formatDate = d3.time.format("%d-%b"),
+var parseDate = d3.time.format.iso.parse,
+    formatDate = d3.time.format.iso, //d3.time.format("%Y-%m-%dT%H:%M:%S.%LZ"),
     bisectDate = d3.bisector(function(d) { return d.date; }).left;
-
+// d3.time.format.utc("%Y-%m-%dT%H:%M:%S.%LZ");
 // Set the ranges
 var x = d3.time.scale().range([0, width]);
 var y = d3.scale.linear().range([height, 0]);
 
 // Define the axes
 var xAxis = d3.svg.axis().scale(x)
-    .orient("bottom").ticks(5);
+    .orient("bottom").ticks(ticks);
 
 var yAxis = d3.svg.axis().scale(y)
-    .orient("left").ticks(5);
+    .orient("left").ticks(ticks);
 
 // Define the line
 var valueline = d3.svg.line()
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y(d.close); });
-    
+
 // Adds the svg canvas
 var svg = d3.select("body")
     .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
     .append("g")
-        .attr("transform", 
+        .attr("transform",
               "translate(" + margin.left + "," + margin.top + ")");
 
-var lineSvg = svg.append("g"); 
+var lineSvg = svg.append("g");
 
-var focus = svg.append("g") 
+var focus = svg.append("g")
     .style("display", "none");
 
+var dataset = [{
+  'date': '2012-03-26T07:00:00.000Z',
+  'close': 10.0
+}, {
+  'date': '2012-03-26T08:00:00.000Z',
+  'close': 11.0
+}, {
+  'date': '2012-03-27T07:00:00.000Z',
+  'close': 12.0
+}, {
+  'date': '2012-03-27T08:00:00.000Z',
+  'close': 11.0
+}, {
+  'date': '2012-03-27T09:00:00.000Z',
+  'close': 9.0
+}, {
+  'date': '2012-03-28T07:00:00.000Z',
+  'close': 7.98
+}];
+
 // Get the data
-d3.csv("atad.csv", function(error, data) {
+// d3.csv("atad.csv", processData); // for csv
+processData(dataset);
+function processData(data) {
     data.forEach(function(d) {
         d.date = parseDate(d.date);
         d.close = +d.close;
@@ -75,7 +99,7 @@ d3.csv("atad.csv", function(error, data) {
 
     // Scale the range of the data
     x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain([0, d3.max(data, function(d) { return d.close; })]);
+    y.domain(d3.extent(data, function(d) { return d.close; }));
 
     // Add the valueline path.
     lineSvg.append("path")
@@ -143,7 +167,7 @@ d3.csv("atad.csv", function(error, data) {
         .attr("class", "y4")
         .attr("dx", 8)
         .attr("dy", "1em");
-    
+
     // append the rectangle to capture mouse
     svg.append("rect")
         .attr("width", width)
@@ -160,7 +184,7 @@ d3.csv("atad.csv", function(error, data) {
 		    d0 = data[i - 1],
 		    d1 = data[i],
 		    d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-
+        console.log(data, d0, d1, d);
 		focus.select("circle.y")
 		    .attr("transform",
 		          "translate(" + x(d.date) + "," +
@@ -193,8 +217,8 @@ d3.csv("atad.csv", function(error, data) {
 		focus.select(".x")
 		    .attr("transform",
 		          "translate(" + x(d.date) + "," +
-		                         y(d.close) + ")")
-		               .attr("y2", height - y(d.close));
+		                          0+ ")")   // mode half: y(d.close)
+		               .attr("y2", height); //height - y(d.close)
 
 		focus.select(".y")
 		    .attr("transform",
@@ -203,7 +227,7 @@ d3.csv("atad.csv", function(error, data) {
 		               .attr("x2", width + width);
 	}
 
-});
+};
 
 </script>
 </body>
