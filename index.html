@@ -1,233 +1,68 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<style> /* set the CSS */
+<style>
+  /* set the CSS */
 
-body { font: 12px Arial;}
+  body {
+    font: 12px Arial;
+  }
 
-path {
+  path {
     stroke: steelblue;
     stroke-width: 2;
     fill: none;
-}
+  }
 
-.axis path,
-.axis line {
+  .axis path,
+  .axis line {
     fill: none;
     stroke: grey;
     stroke-width: 1;
     shape-rendering: crispEdges;
-}
-
+  }
 </style>
+
 <body>
-<!-- Ref: http://www.d3noob.org/2014/07/my-favourite-tooltip-method-for-line.html -->
+  <!-- Ref: http://www.d3noob.org/2014/07/my-favourite-tooltip-method-for-line.html -->
 
-<!-- load the d3.js library -->
-<script src="http://d3js.org/d3.v3.min.js"></script>
+  <!-- load the d3.js library -->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="./lineChart.js"></script>
+  <script>
+    var dataset = [{
+    	'date': '2012-03-26T07:00:00.000Z',
+    	'close': 10.0
+    }, {
+    	'date': '2012-03-26T08:00:00.000Z',
+    	'close': 11.0
+    }, {
+    	'date': '2012-03-27T07:00:00.000Z',
+    	'close': 12.0
+    }, {
+    	'date': '2012-03-27T08:00:00.000Z',
+    	'close': 11.0
+    }, {
+    	'date': '2012-03-27T09:00:00.000Z',
+    	'close': 9.0
+    }, {
+    	'date': '2012-03-28T07:00:00.000Z',
+    	'close': 7.98
+    }];
 
-<script>
+    var config = {
+    	margin: {
+    		top: 30,
+    		right: 200,
+    		bottom: 30,
+    		left: 50
+    	},
+    	ticks: 10,
+    	targetElem: "body",
+    	width: 800,
+    	height: 240,
+    	dataset: dataset
+    };
 
-// Set the dimensions of the canvas / graph
-var margin = {top: 30, right: 200, bottom: 30, left: 50},
-    width = 800 - margin.left - margin.right,
-    height = 240 - margin.top - margin.bottom,
-    ticks = 10;
-
-// Parse the date / time
-var parseDate = d3.time.format.iso.parse,
-    formatDate = d3.time.format.iso, //d3.time.format("%Y-%m-%dT%H:%M:%S.%LZ"),
-    bisectDate = d3.bisector(function(d) { return d.date; }).left;
-// d3.time.format.utc("%Y-%m-%dT%H:%M:%S.%LZ");
-// Set the ranges
-var x = d3.time.scale().range([0, width]);
-var y = d3.scale.linear().range([height, 0]);
-
-// Define the axes
-var xAxis = d3.svg.axis().scale(x)
-    .orient("bottom").ticks(ticks);
-
-var yAxis = d3.svg.axis().scale(y)
-    .orient("left").ticks(ticks);
-
-// Define the line
-var valueline = d3.svg.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.close); });
-
-// Adds the svg canvas
-var svg = d3.select("body")
-    .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-        .attr("transform",
-              "translate(" + margin.left + "," + margin.top + ")");
-
-var lineSvg = svg.append("g");
-
-var focus = svg.append("g")
-    .style("display", "none");
-
-var dataset = [{
-  'date': '2012-03-26T07:00:00.000Z',
-  'close': 10.0
-}, {
-  'date': '2012-03-26T08:00:00.000Z',
-  'close': 11.0
-}, {
-  'date': '2012-03-27T07:00:00.000Z',
-  'close': 12.0
-}, {
-  'date': '2012-03-27T08:00:00.000Z',
-  'close': 11.0
-}, {
-  'date': '2012-03-27T09:00:00.000Z',
-  'close': 9.0
-}, {
-  'date': '2012-03-28T07:00:00.000Z',
-  'close': 7.98
-}];
-
-// Get the data
-// d3.csv("atad.csv", processData); // for csv
-processData(dataset);
-function processData(data) {
-    data.forEach(function(d) {
-        d.date = parseDate(d.date);
-        d.close = +d.close;
-    });
-
-    // Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.date; }));
-    y.domain(d3.extent(data, function(d) { return d.close; }));
-
-    // Add the valueline path.
-    lineSvg.append("path")
-        .attr("class", "line")
-        .attr("d", valueline(data));
-
-    // Add the X Axis
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-
-    // Add the Y Axis
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
-
-   // append the x line
-    focus.append("line")
-        .attr("class", "x")
-        .style("stroke", "blue")
-        .style("stroke-dasharray", "3,3")
-        .style("opacity", 0.5)
-        .attr("y1", 0)
-        .attr("y2", height);
-
-    // append the y line
-    focus.append("line")
-        .attr("class", "y")
-        .style("stroke", "blue")
-        .style("stroke-dasharray", "3,3")
-        .style("opacity", 0.5)
-        .attr("x1", width)
-        .attr("x2", width);
-
-    // append the circle at the intersection
-    focus.append("circle")
-        .attr("class", "y")
-        .style("fill", "none")
-        .style("stroke", "blue")
-        .attr("r", 4);
-
-    // place the value at the intersection
-    focus.append("text")
-        .attr("class", "y1")
-        .style("stroke", "white")
-        .style("stroke-width", "3.5px")
-        .style("opacity", 0.8)
-        .attr("dx", 8)
-        .attr("dy", "-.3em");
-    focus.append("text")
-        .attr("class", "y2")
-        .attr("dx", 8)
-        .attr("dy", "-.3em");
-
-    // place the date at the intersection
-    focus.append("text")
-        .attr("class", "y3")
-        .style("stroke", "white")
-        .style("stroke-width", "3.5px")
-        .style("opacity", 0.8)
-        .attr("dx", 8)
-        .attr("dy", "1em");
-    focus.append("text")
-        .attr("class", "y4")
-        .attr("dx", 8)
-        .attr("dy", "1em");
-
-    // append the rectangle to capture mouse
-    svg.append("rect")
-        .attr("width", width)
-        .attr("height", height)
-        .style("fill", "none")
-        .style("pointer-events", "all")
-        .on("mouseover", function() { focus.style("display", null); })
-        .on("mouseout", function() { focus.style("display", "none"); })
-        .on("mousemove", mousemove);
-
-    function mousemove() {
-		var x0 = x.invert(d3.mouse(this)[0]),
-		    i = bisectDate(data, x0, 1),
-		    d0 = data[i - 1],
-		    d1 = data[i],
-		    d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-        console.log(data, d0, d1, d);
-		focus.select("circle.y")
-		    .attr("transform",
-		          "translate(" + x(d.date) + "," +
-		                         y(d.close) + ")");
-
-		focus.select("text.y1")
-		    .attr("transform",
-		          "translate(" + x(d.date) + "," +
-		                         y(d.close) + ")")
-		    .text(d.close);
-
-		focus.select("text.y2")
-		    .attr("transform",
-		          "translate(" + x(d.date) + "," +
-		                         y(d.close) + ")")
-		    .text(d.close);
-
-		focus.select("text.y3")
-		    .attr("transform",
-		          "translate(" + x(d.date) + "," +
-		                         y(d.close) + ")")
-		    .text(formatDate(d.date));
-
-		focus.select("text.y4")
-		    .attr("transform",
-		          "translate(" + x(d.date) + "," +
-		                         y(d.close) + ")")
-		    .text(formatDate(d.date));
-
-		focus.select(".x")
-		    .attr("transform",
-		          "translate(" + x(d.date) + "," +
-		                          0+ ")")   // mode half: y(d.close)
-		               .attr("y2", height); //height - y(d.close)
-
-		focus.select(".y")
-		    .attr("transform",
-		          "translate(" + width * -1 + "," +
-		                         y(d.close) + ")")
-		               .attr("x2", width + width);
-	}
-
-};
-
-</script>
+    var chart1 = new LineChart(config);
+  </script>
 </body>
